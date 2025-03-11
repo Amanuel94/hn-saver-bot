@@ -125,11 +125,16 @@ async def execute_job():
                     now = datetime.datetime.now()
                     published = datetime.datetime.fromtimestamp(story["time"])
                     time_diff = now - published
-                    hrs = time_diff.total_seconds() // 3600
+                    hrs = int(time_diff.total_seconds()) // 3600
+                    mins = int(time_diff.total_seconds()) // 60
                     display_time = (
-                        str(hrs) + " hours"
-                        if time_diff.days == 0
-                        else str(time_diff.days) + " days"
+                        str(mins) + " minutes"
+                        if mins < 60
+                        else (
+                            str(hrs) + " hours"
+                            if hrs < 24
+                            else str(time_diff.days) + " days"
+                        )
                     )
 
                     activity = ""
@@ -169,7 +174,7 @@ async def execute_job():
                             ),
                         ),
                         InlineKeyboardButton(
-                            text="Comments",
+                            text=f"Comments({len(story.get('kids', []))}+)",
                             url=TG_BOT_CALLBACK_LINK.format(
                                 f"{cmds['list']['name']}_" + str(story["id"])
                             ),
