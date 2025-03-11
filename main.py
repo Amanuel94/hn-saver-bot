@@ -128,10 +128,10 @@ async def execute_job():
                     hrs = int(time_diff.total_seconds()) // 3600
                     mins = int(time_diff.total_seconds()) // 60
                     display_time = (
-                        str(mins) + " minutes"
+                        str(mins) + " minute" + ("s" if mins > 1 else "")
                         if mins < 60
                         else (
-                            str(hrs) + " hours"
+                            str(hrs) + " hour" + ("s" if hrs > 1 else "")
                             if hrs < 24
                             else str(time_diff.days) + " days"
                         )
