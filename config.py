@@ -13,10 +13,7 @@ MONGO_URL = os.getenv("MONGO_URL")
 WEBHOOK_ROUTE = os.getenv("WEBHOOK_ROUTE")
 
 MONGO_DB_NAME = "mongo_hn_comments"
-if DEVELOPMENT == "True":
-    CHANNEL_ID = int(os.getenv("DEV_CHANNEL_ID"))
-else:
-    CHANNEL_ID = int(os.getenv("CHANNEL_ID"))
+CHANNEL_ID = int(os.getenv("CHANNEL_ID"))
 
 DEFAULT_PAGE_SIZE = 10
 API_VERSION = "v0"
@@ -29,10 +26,13 @@ HOST = "0.0.0.0"
 PORT = 8443
 GENERIC_ERROR_MESSAGE = "Something went wrong. Please try again later."
 
-TG_BOT_CALLBACK_LINK = "t.me/hackernews_saver_bot?start={0}"
+if DEVELOPMENT == "True":
+    TG_BOT_CALLBACK_LINK = "t.me/hn_feed_clone_bot?start={0}"
+else:
+    TG_BOT_CALLBACK_LINK = "t.me/hackernews_saver_bot?start={0}"
 
 if DEVELOPMENT == "True":
-    WEBHOOK_URL = "https://modern-experts-relate.loca.lt/"
+    WEBHOOK_URL = "https://hot-bikes-double.loca.lt/"
 
 
 bot = AsyncTeleBot(API_TOKEN)
