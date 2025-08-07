@@ -2,6 +2,7 @@ import sqlite3
 from contextlib import ContextDecorator
 
 from pymongo import MongoClient
+from pymongo.errors import ConnectionFailure
 
 from config import MONGO_URL, logger
 
@@ -165,15 +166,22 @@ class Database(ContextDecorator):
 class MongoDatabase(ContextDecorator):
 
     def __init__(self, db):
-        self.client = MongoClient(MONGO_URL)
-        self.bookmarks = self.client[db]["bookmarks"]
-        self.pages = self.client[db]["pages"]
-        self.stories = self.client[db]["stories"]
+        try:
+            self.client = MongoClient(MONGO_URL)
+            self.bookmarks = self.client[db]["bookmarks"]
+            self.pages = self.client[db]["pages"]
+            self.stories = self.client[db]["stories"]
 
-        self.bookmarks.create_index([("userid", 1), ("iid", 1)], unique=True)
-        self.stories.create_index("id", unique=True)
-
-        return
+            try:
+                # The ping command is cheap and does not require auth.
+                self.client.admin.command('ping')
+            except ConnectionFailure:
+                logger.error("Error Connecting to MongoDB: Server not available")
+            self.bookmarks.create_index([("userid", 1), ("iid", 1)], unique=True)
+            self.stories.create_index("id", unique=True)
+            return
+        except Exception as e:
+            logger.error(f"error occured while trying to connect to mongo database: {e}")
 
     def __enter__(self):
         return self

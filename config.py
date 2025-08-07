@@ -32,7 +32,7 @@ else:
     TG_BOT_CALLBACK_LINK = "t.me/hackernews_saver_bot?start={0}"
 
 if DEVELOPMENT == "True":
-    WEBHOOK_URL = "https://hot-bikes-double.loca.lt/"
+    WEBHOOK_URL = "https://ripe-regions-write.loca.lt/"
 
 
 bot = AsyncTeleBot(API_TOKEN)

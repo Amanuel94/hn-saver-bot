@@ -2,6 +2,7 @@ import asyncio
 import atexit
 import datetime
 import aiohttp
+import time
 from flask import Flask, request
 
 import threading
@@ -33,6 +34,7 @@ import tldextract
 
 async def config_webhook():
 
+    # logger.debug("webhook url: ", WEBHOOK_URL, WEBHOOK_ROUTE)
     res = await bot.set_webhook(WEBHOOK_URL + WEBHOOK_ROUTE)
     if not res:
         raise Exception("Couldn't set webhook")
@@ -86,7 +88,6 @@ async def execute_job():
 
     logger.debug("Getting cron request...")
     url = BASE_API_URL + "topstories.json"
-
     async with aiohttp.ClientSession() as hn_session:
         all_top_stories = await make_req(url, hn_session)
         top_stories = filter_posted(all_top_stories)
@@ -202,20 +203,31 @@ async def execute_job():
                                 "Failed to send message: %s", await response.text()
                             )
 
+                            logger.debug(f"{len(posted)} messages are posted")
                             response_data = await response.json(
                                 encoding=response.get_encoding()
                             )
                             if response_data.get("error_code", None) == 429:
                                 logger.error("Rate limit exceeded")
+                                try:
+                                    with MongoDatabase(MONGO_DB_NAME) as db:
+                                        logger.debug("Saving posts in database in the mean time...")
+                                        db.post_stories(posted)
+                                        logger.debug(f"{len(posted)} postes saved to database")
+                                        posted = []
+                                except Exception as e:
+                                    logger.error("Failed to post story: %s", e)
+
                                 await asyncio.sleep(
                                     response_data["parameters"]["retry_after"] + 1
                                 )
-                                return
 
                         else:
                             posted.append(str(story["id"]))
                             tasks.remove(task)
 
+
+            logger.debug("loop exit")
             try:
                 with MongoDatabase(MONGO_DB_NAME) as db:
                     db.post_stories(posted)
