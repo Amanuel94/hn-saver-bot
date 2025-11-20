@@ -194,38 +194,37 @@ async def execute_job():
                         "reply_markup": markup.to_dict(),
                     }
 
-                    # async with tg_session.post(
-                    #     f"https://api.telegram.org/bot{bot.token}/sendMessage",
-                    #     json=payload,
-                    # ) as response:
-                    #     if response.status != 200:
-                    #         logger.error(
-                    #             "Failed to send message: %s", await response.text()
-                    #         )
+                    async with tg_session.post(
+                        f"https://api.telegram.org/bot{bot.token}/sendMessage",
+                        json=payload,
+                    ) as response:
+                        if response.status != 200:
+                            logger.error(
+                                "Failed to send message: %s", await response.text()
+                            )
 
-                    #         logger.debug(f"{len(posted)} messages are posted")
-                    #         response_data = await response.json(
-                    #             encoding=response.get_encoding()
-                    #         )
-                    #         if response_data.get("error_code", None) == 429:
-                    #             logger.error("Rate limit exceeded")
-                    #             try:
-                    #                 with MongoDatabase(MONGO_DB_NAME) as db:
-                    #                     logger.debug("Saving posts in database in the mean time...")
-                    #                     db.post_stories(posted)
-                    #                     logger.debug(f"{len(posted)} postes saved to database")
-                    #                     posted = []
-                    #             except Exception as e:
-                    #                 logger.error("Failed to post story: %s", e)
+                            logger.debug(f"{len(posted)} messages are posted")
+                            response_data = await response.json(
+                                encoding=response.get_encoding()
+                            )
+                            if response_data.get("error_code", None) == 429:
+                                logger.error("Rate limit exceeded")
+                                try:
+                                    with MongoDatabase(MONGO_DB_NAME) as db:
+                                        logger.debug("Saving posts in database in the mean time...")
+                                        db.post_stories(posted)
+                                        logger.debug(f"{len(posted)} postes saved to database")
+                                        posted = []
+                                except Exception as e:
+                                    logger.error("Failed to post story: %s", e)
 
-                    #             await asyncio.sleep(
-                    #                 response_data["parameters"]["retry_after"] + 1
-                    #             )
+                                await asyncio.sleep(
+                                    response_data["parameters"]["retry_after"] + 1
+                                )
 
-                    #     else:
-
-                    posted.append(str(story["id"]))
-                    tasks.remove(task)
+                        else:
+                            posted.append(str(story["id"]))
+                            tasks.remove(task)
 
 
             logger.debug("loop exit")
