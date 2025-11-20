@@ -223,8 +223,9 @@ async def execute_job():
                     #             )
 
                     #     else:
-                    #         posted.append(str(story["id"]))
-                    #         tasks.remove(task)
+
+                    posted.append(str(story["id"]))
+                    tasks.remove(task)
 
 
             logger.debug("loop exit")
