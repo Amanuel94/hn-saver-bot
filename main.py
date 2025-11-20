@@ -84,7 +84,7 @@ def filter_posted(all_top_stories):
         return set(all_top_stories) - set(db.search_stories(all_top_stories))
 
 
-async def execute_job():
+async def execute_job(force=False):
 
     logger.debug("Getting cron request...")
     url = BASE_API_URL + "topstories.json"
@@ -194,37 +194,41 @@ async def execute_job():
                         "reply_markup": markup.to_dict(),
                     }
 
-                    async with tg_session.post(
-                        f"https://api.telegram.org/bot{bot.token}/sendMessage",
-                        json=payload,
-                    ) as response:
-                        if response.status != 200:
-                            logger.error(
-                                "Failed to send message: %s", await response.text()
-                            )
-
-                            logger.debug(f"{len(posted)} messages are posted")
-                            response_data = await response.json(
-                                encoding=response.get_encoding()
-                            )
-                            if response_data.get("error_code", None) == 429:
-                                logger.error("Rate limit exceeded")
-                                try:
-                                    with MongoDatabase(MONGO_DB_NAME) as db:
-                                        logger.debug("Saving posts in database in the mean time...")
-                                        db.post_stories(posted)
-                                        logger.debug(f"{len(posted)} postes saved to database")
-                                        posted = []
-                                except Exception as e:
-                                    logger.error("Failed to post story: %s", e)
-
-                                await asyncio.sleep(
-                                    response_data["parameters"]["retry_after"] + 1
+                    if force:
+                        posted.append(str(story["id"]))
+                        tasks.remove(task)
+                    else:
+                        async with tg_session.post(
+                            f"https://api.telegram.org/bot{bot.token}/sendMessage",
+                            json=payload,
+                        ) as response:
+                            if response.status != 200:
+                                logger.error(
+                                    "Failed to send message: %s", await response.text()
                                 )
 
-                        else:
-                            posted.append(str(story["id"]))
-                            tasks.remove(task)
+                                logger.debug(f"{len(posted)} messages are posted")
+                                response_data = await response.json(
+                                    encoding=response.get_encoding()
+                                )
+                                if response_data.get("error_code", None) == 429:
+                                    logger.error("Rate limit exceeded")
+                                    try:
+                                        with MongoDatabase(MONGO_DB_NAME) as db:
+                                            logger.debug("Saving posts in database in the mean time...")
+                                            db.post_stories(posted)
+                                            logger.debug(f"{len(posted)} postes saved to database")
+                                            posted = []
+                                    except Exception as e:
+                                        logger.error("Failed to post story: %s", e)
+
+                                    await asyncio.sleep(
+                                        response_data["parameters"]["retry_after"] + 1
+                                    )
+
+                            else:
+                                posted.append(str(story["id"]))
+                                tasks.remove(task)
 
 
             logger.debug("loop exit")
@@ -251,6 +255,25 @@ async def cron():
     thread.daemon = True
     thread.start()
     return "OK"
+
+
+@app.route("/force-cron", methods=["GET", "HEAD"])
+async def force_cron():
+    logger.warn("Getting forced cron request...")
+    logger.debug(request.headers)
+    try:
+        token = request.authorization.password
+    except AttributeError:
+        return "Unauthorized", 401
+
+    if token != API_TOKEN:
+        return "Unauthorized", 401
+
+    thread = threading.Thread(target=lambda: asyncio.run(execute_job(force=True)))
+    thread.daemon = True
+    thread.start()
+    return "OK"
+
 
 
 async def delete_webhook():
