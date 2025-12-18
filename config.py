@@ -21,10 +21,11 @@ BASE_API_URL = f" https://hacker-news.firebaseio.com/{API_VERSION}/"
 HN_URL = "https://news.ycombinator.com/"
 RATE_LIMIT = 30
 TIME_FRAME = 60  # seconds
-TOP_STORY_SCORE = 150
+TOP_STORY_SCORE = 200
 HOST = "0.0.0.0"
 PORT = 8443
 GENERIC_ERROR_MESSAGE = "Something went wrong. Please try again later."
+ME = os.getenv('ME')
 
 if DEVELOPMENT == "True":
     TG_BOT_CALLBACK_LINK = "t.me/hn_feed_clone_bot?start={0}"
@@ -32,7 +33,7 @@ else:
     TG_BOT_CALLBACK_LINK = "t.me/hackernews_saver_bot?start={0}"
 
 if DEVELOPMENT == "True":
-    WEBHOOK_URL = "https://ripe-regions-write.loca.lt/"
+    WEBHOOK_URL = "https://8ba990b818e9.ngrok-free.app/"
 
 
 bot = AsyncTeleBot(API_TOKEN)

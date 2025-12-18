@@ -11,10 +11,12 @@ from config import (
     bot,
     logger,
     MONGO_DB_NAME,
+    ME
 )
 from .middleware import rate_limiter
 from .utils import get_args, template, user_url, item_url, parse_xml
 from database import Database, MongoDatabase
+from .jobs import execute_job
 
 
 async def list_comments(iid, message: Message, page=0):
@@ -413,3 +415,11 @@ async def delete_all(message):
     except Exception as e:
         logger.error(f"An error occurred: {str(e)} - delete_all")
         await bot.send_message(message.chat.id, text=GENERIC_ERROR_MESSAGE)
+
+
+@bot.message_handler(commands=['sync'])
+@rate_limiter
+async def sync_db(message):
+    if(message.from_user.id != int(ME)):
+        return
+    await execute_job(force=True)
