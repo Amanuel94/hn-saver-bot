@@ -25,7 +25,7 @@ TOP_STORY_SCORE = 200
 HOST = "0.0.0.0"
 PORT = 8443
 GENERIC_ERROR_MESSAGE = "Something went wrong. Please try again later."
-ME = os.getenv('ME')
+ME = os.getenv("ME")
 
 if DEVELOPMENT == "True":
     TG_BOT_CALLBACK_LINK = "t.me/hn_feed_clone_bot?start={0}"

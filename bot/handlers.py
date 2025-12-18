@@ -420,6 +420,11 @@ async def delete_all(message):
 @bot.message_handler(commands=['sync'])
 @rate_limiter
 async def sync_db(message):
-    if(message.from_user.id != int(ME)):
-        return
-    await execute_job(force=True)
+    try:
+        if(message.from_user.id != int(ME)):
+            return
+        await execute_job(force=True)
+        await bot.send_message(message.chat.id, text="Database Synced")
+    except Exception as e:
+        logger.error(f"An error occurred: {str(e)} - sync_db")
+        await bot.send_message(message.chat.id, text=str(e))
