@@ -9,7 +9,7 @@ Clone the repository and install dependencies:
 ```bash
 git clone https://github.com/Amanuel94/hn-saver-bot.git
 cd hn-saver-bot
-npm install
+python -m pip install -r requirements.txt
 ```
 ## Configuration
 
